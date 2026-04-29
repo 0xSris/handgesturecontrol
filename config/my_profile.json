@@ -1,0 +1,23 @@
+{
+  "cursor_sensitivity": 1.35,
+  "cursor_dead_zone": 0.006,
+  "action_cooldown_seconds": 0.65,
+  "drag_hold_seconds": 0.45,
+  "lock_hold_seconds": 0.8,
+  "volume_min_pinch": 0.0463,
+  "volume_max_pinch": 0.1522,
+  "shortcuts": {
+    "point": [
+      "alt",
+      "tab"
+    ],
+    "peace": [
+      "playpause"
+    ],
+    "pinch": [
+      "win",
+      "shift",
+      "s"
+    ]
+  }
+}

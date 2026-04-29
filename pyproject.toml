@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "hand-gesture-control"
+version = "0.1.0"
+description = "Real-time hand gesture recognition for computer control."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "opencv-python>=4.9,<5",
+  "mediapipe>=0.10,<0.11",
+  "numpy>=1.24,<2",
+  "pyautogui>=0.9,<1",
+  "pycaw>=20240210",
+]
+
+[project.scripts]
+gesture-control = "gesture_control.app:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
