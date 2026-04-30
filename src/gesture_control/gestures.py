@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 from dataclasses import dataclass
 from math import hypot
@@ -44,13 +44,16 @@ def classify_gesture(
     index_position = point_2d(landmarks[INDEX_TIP])
     palm_position = point_2d(landmarks[INDEX_MCP])
     extended = sum(fingers)
-    index, middle, ring, pinky = fingers[1:]
+    thumb, index, middle, ring, pinky = fingers
 
     if pinch < pinch_threshold and (index or extended > 0):
         return GestureResult("pinch", confidence_from_distance(pinch, pinch_threshold), fingers, pinch, middle_pinch, index_position, palm_position)
 
     if middle_pinch < middle_pinch_threshold and middle:
         return GestureResult("middle_pinch", confidence_from_distance(middle_pinch, middle_pinch_threshold), fingers, pinch, middle_pinch, index_position, palm_position)
+
+    if thumb and not index and not middle and not ring and not pinky:
+        return GestureResult("thumbs_up", 0.88, fingers, pinch, middle_pinch, index_position, palm_position)
 
     if extended == 5 or (index and middle and ring and pinky):
         return GestureResult("open_palm", 0.96, fingers, pinch, middle_pinch, index_position, palm_position)
@@ -99,3 +102,4 @@ def confidence_from_distance(value: float, threshold: float) -> float:
     if threshold <= 0:
         return 0.0
     return max(0.0, min(1.0, 1.0 - (value / threshold)))
+

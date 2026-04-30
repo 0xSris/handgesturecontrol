@@ -1,4 +1,4 @@
-# Project Explanation
+﻿# Project Explanation
 
 ## Short Explanation
 
@@ -38,3 +38,4 @@ The action engine uses cooldowns and smoothing so a gesture must be stable befor
 ## Resume Version
 
 Built a real-time gesture-controlled computer interaction system using OpenCV and MediaPipe, enabling cursor movement, volume control, shortcuts, browser actions, presentation control, and QR-based local file transfer. Engineered gesture classification, smoothing, calibration, safety locks, event logging, and Windows packaging for a reliable applied AI user experience.
+

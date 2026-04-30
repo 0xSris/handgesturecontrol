@@ -1,4 +1,4 @@
-from gesture_control.actions import AutomationBackend, ControlMode, GestureActionEngine
+﻿from gesture_control.actions import AutomationBackend, ControlMode, GestureActionEngine
 from gesture_control.config import RuntimeConfig
 from gesture_control.gestures import GestureResult
 
@@ -247,9 +247,13 @@ def test_media_mode_controls_playback():
     engine.handle_keyboard(ord("m"))
     engine.update("peace", gesture("peace"))
     engine.update("point", gesture("point"))
+    engine.update("pinch", gesture("pinch"))
+    engine.update("thumbs_up", gesture("thumbs_up", fingers_up=(True, False, False, False, False)))
 
     assert ("press", "playpause") in backend.calls
-    assert ("press", "nexttrack") in backend.calls
+    assert ("hotkey", ("shift", "n")) in backend.calls
+    assert ("hotkey", ("shift", "p")) in backend.calls
+    assert ("press", "volumemute") in backend.calls
 
 
 def test_browser_mode_controls_tabs():
@@ -274,9 +278,11 @@ def test_presentation_mode_controls_slides():
     engine.handle_keyboard(ord("p"))
     engine.update("point", gesture("point"))
     engine.update("peace", gesture("peace"))
+    engine.update("thumbs_up", gesture("thumbs_up", fingers_up=(True, False, False, False, False)))
 
     assert ("press", "right") in backend.calls
     assert ("press", "left") in backend.calls
+    assert backend.calls.count(("press", "esc")) == 2
 
 
 def test_share_mode_copies_and_opens_link():
@@ -294,3 +300,4 @@ def test_share_mode_copies_and_opens_link():
 
     assert ("copy_text", "http://192.168.1.10:8765/") in backend.calls
     assert ("open_url", "http://192.168.1.10:8765/") in backend.calls
+

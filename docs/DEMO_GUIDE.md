@@ -1,4 +1,4 @@
-# Demo Guide
+﻿# Demo Guide
 
 ## Before You Start
 
@@ -33,3 +33,4 @@ python -m gesture_control --camera -1 --enable-actions --profile config/my_profi
 - Press `c`, `v`, `x`, `m`, `b`, `p`, or `h` to force a mode.
 - Press `t` to restart the share server.
 - Press `q` or `Esc` to exit.
+

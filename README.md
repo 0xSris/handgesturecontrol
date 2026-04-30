@@ -1,4 +1,4 @@
-# Hand Gesture Control
+﻿# Hand Gesture Control
 
 Real-time hand gesture recognition for controlling a computer through a webcam. The application uses OpenCV for video capture, MediaPipe for hand landmark detection, and a custom action engine to turn gestures into mouse, keyboard, volume, browser, presentation, and file-sharing controls.
 
@@ -111,7 +111,7 @@ cursor mode:
 point           move cursor
 pinch           click on release
 pinch hold      drag and drop
-middle pinch    right click
+thumbs up       right click
 peace           scroll
 
 volume mode:
@@ -123,22 +123,22 @@ peace           play/pause
 pinch           screenshot snip
 
 media mode:
-point           next track
+point           next video
 peace           play/pause
-pinch           previous track
-middle pinch    mute
+pinch           previous video
+thumbs up       mute
 
 browser mode:
 point           open browser
 peace           open browser tab
 pinch           close tab
-middle pinch    reopen closed tab
+thumbs up       reopen closed tab
 
 presentation mode:
 point           next slide
 peace           previous slide
 pinch           start slideshow
-middle pinch    end slideshow
+thumbs up       end slideshow
 
 share mode:
 point           copy transfer link
@@ -221,3 +221,5 @@ Current test coverage includes gesture classification, action handling, calibrat
 ## Resume Summary
 
 Built a real-time gesture-controlled computer interaction system using OpenCV and MediaPipe, enabling cursor movement, volume control, shortcuts, browser actions, presentation control, and QR-based local file transfer. Engineered gesture classification, temporal smoothing, calibration, safety locks, event logging, and Windows packaging for a reliable Applied AI user experience.
+
+

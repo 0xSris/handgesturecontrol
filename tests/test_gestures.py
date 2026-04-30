@@ -1,4 +1,4 @@
-from gesture_control.gestures import classify_gesture, fingers_are_up
+﻿from gesture_control.gestures import classify_gesture, fingers_are_up
 from gesture_control.smoothing import LabelSmoother, majority_vote
 
 
@@ -37,6 +37,9 @@ def test_point_classification():
     result = classify_gesture(hand_with_states(False, True, False, False, False), "Right")
     assert result.name == "point"
 
+def test_thumbs_up_classification():
+    result = classify_gesture(hand_with_states(True, False, False, False, False), "Right")
+    assert result.name == "thumbs_up"
 
 def test_pinch_classification_when_index_tip_is_curled():
     landmarks = hand_with_states(True, False, False, False, False)
@@ -62,3 +65,5 @@ def test_label_smoothing_majority_vote():
         stable = smoother.update(label)
     assert stable == "point"
     assert majority_vote(["a", "b", "a"]) == "a"
+
+

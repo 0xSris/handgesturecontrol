@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import time
 from dataclasses import dataclass
@@ -304,7 +304,7 @@ class GestureActionEngine:
         return self.status
 
     def _handle_cursor_mode(self, label: str, gesture: GestureResult, now: float) -> None:
-        if label in {"point", "pinch", "middle_pinch"}:
+        if label in {"point", "pinch", "middle_pinch", "thumbs_up"}:
             x, y = self._scaled_pointer(gesture.index_position)
             self._backend.move_cursor(x, y)
             self._last_action = "move cursor"
@@ -314,7 +314,7 @@ class GestureActionEngine:
         else:
             self._finish_primary_pinch(now)
 
-        if label == "middle_pinch" and self._ready(now):
+        if label in {"middle_pinch", "thumbs_up"} and self._ready(now):
             self._backend.right_click()
             self._mark_trigger(now, "right click")
 
@@ -351,15 +351,15 @@ class GestureActionEngine:
         if not self._ready(now):
             return
         if label == "point":
-            self._backend.press("nexttrack")
-            self._mark_trigger(now, "media next")
+            self._backend.hotkey("shift", "n")
+            self._mark_trigger(now, "next video")
         elif label == "peace":
             self._backend.press("playpause")
             self._mark_trigger(now, "media play/pause")
         elif label == "pinch":
-            self._backend.press("prevtrack")
-            self._mark_trigger(now, "media previous")
-        elif label == "middle_pinch":
+            self._backend.hotkey("shift", "p")
+            self._mark_trigger(now, "previous video")
+        elif label in {"middle_pinch", "thumbs_up"}:
             self._backend.press("volumemute")
             self._mark_trigger(now, "mute")
 
@@ -375,7 +375,7 @@ class GestureActionEngine:
         elif label == "pinch":
             self._backend.hotkey("ctrl", "w")
             self._mark_trigger(now, "close tab")
-        elif label == "middle_pinch":
+        elif label in {"middle_pinch", "thumbs_up"}:
             self._backend.hotkey("ctrl", "shift", "t")
             self._mark_trigger(now, "reopen tab")
 
@@ -391,7 +391,8 @@ class GestureActionEngine:
         elif label == "pinch":
             self._backend.press("f5")
             self._mark_trigger(now, "start slideshow")
-        elif label == "middle_pinch":
+        elif label in {"middle_pinch", "thumbs_up"}:
+            self._backend.press("esc")
             self._backend.press("esc")
             self._mark_trigger(now, "end slideshow")
 
@@ -482,3 +483,5 @@ class GestureActionEngine:
 
     def _reset_pinch(self) -> None:
         self._pinch_started_at = None
+
+

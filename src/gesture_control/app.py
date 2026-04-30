@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import argparse
 import time
@@ -213,17 +213,17 @@ def mode_hints(status: ActionStatus) -> list[str]:
         return ["open palm: unlock", "hold fist: lock", "three fingers: change mode", "keys: u unlock, l lock"]
 
     if status.mode.value == "cursor":
-        return ["point: move", "pinch: click / hold drag", "middle pinch: right click", "peace: scroll"]
+        return ["point: move", "pinch: click / hold drag", "thumbs up: right click", "peace: scroll"]
     if status.mode.value == "volume":
         return ["thumb-index distance: volume", "three fingers: shortcuts mode", "hold fist: lock"]
     if status.mode.value == "shortcuts":
         return ["point: alt-tab", "peace: play/pause", "pinch: screenshot", "hold fist: lock"]
     if status.mode.value == "media":
-        return ["point: next", "peace: play/pause", "pinch: previous", "middle pinch: mute"]
+        return ["point: next video", "peace: play/pause", "pinch: previous video", "thumbs up: mute"]
     if status.mode.value == "browser":
-        return ["point: open browser", "peace: new tab", "pinch: close tab", "middle pinch: reopen tab"]
+        return ["point: open browser", "peace: new tab", "pinch: close tab", "thumbs up: reopen tab"]
     if status.mode.value == "presentation":
-        return ["point: next slide", "peace: previous slide", "pinch: start show", "middle pinch: end show"]
+        return ["point: next slide", "peace: previous slide", "pinch: start show", "thumbs up: end show"]
     return ["point: copy link", "peace: open share page", "pinch: copy + open", "key t: toggle server"]
 
 
@@ -368,3 +368,4 @@ def parse_args() -> RuntimeConfig:
     )
     values.update(profile)
     return RuntimeConfig(**values)
+
