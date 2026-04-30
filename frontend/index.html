@@ -1,154 +1,112 @@
-<!doctype html>
-<html lang="en">
+﻿<!doctype html>
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Hand Gesture Control Demo</title>
+  <title>Hand Gesture Control System</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <header class="topbar">
-    <div>
-      <p class="eyebrow">OpenCV + MediaPipe + system automation</p>
-      <h1>Hand Gesture Control</h1>
-    </div>
-    <nav aria-label="Page sections">
-      <a href="#demo">Demo</a>
-      <a href="#gestures">Gestures</a>
-      <a href="#ai">Applied AI</a>
-      <a href="#run">Run</a>
-    </nav>
-  </header>
+  <div class="page-shell">
+    <header class="topbar glass">
+      <a class="brand" href="#home" aria-label="Hand Gesture Control home">
+        <span class="brand-mark">HG</span>
+        <span><strong>Hand Gesture Control</strong><small>Computer Vision Interface</small></span>
+      </a>
+      <nav aria-label="Primary navigation">
+        <a href="#overview">Overview</a>
+        <a href="#features">Features</a>
+        <a href="#pipeline">Pipeline</a>
+        <a href="#demo">Demo</a>
+      </nav>
+      <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Toggle day and night mode">
+        <span class="toggle-icon" aria-hidden="true">☾</span><span class="toggle-text">Night</span>
+      </button>
+    </header>
 
-  <main>
-    <section class="dashboard" id="demo">
-      <div class="brief">
-        <p class="tag">Real-time interaction system</p>
-        <h2>Control your computer with hand gestures, then transfer a file to your phone with a scan.</h2>
-        <p>
-          This project tracks 21 hand landmarks from a webcam, classifies stable gestures, and maps them to real actions:
-          cursor movement, volume control, shortcuts, browser actions, presentation control, and local file transfer.
-        </p>
-        <div class="action-row">
-          <a class="button primary" href="#run">Start demo</a>
-          <a class="button" href="#script">Speaking guide</a>
+    <main id="home">
+      <section class="hero">
+        <div class="hero-copy glass">
+          <p class="kicker">Applied Computer Vision Project</p>
+          <h1>Hands-free computer control using real-time gesture recognition.</h1>
+          <p class="hero-text">A webcam-based interaction system that identifies hand landmarks, recognizes stable gestures, and converts them into practical computer actions such as cursor control, volume adjustment, shortcuts, presentation navigation, browser control, and QR-based file sharing.</p>
+          <div class="hero-actions">
+            <a class="button primary" href="#demo">View demo flow</a>
+            <a class="button ghost" href="#pipeline">See architecture</a>
+          </div>
+          <div class="hero-metrics" aria-label="Project metrics">
+            <article><strong>21</strong><span>hand landmarks</span></article>
+            <article><strong>7</strong><span>control modes</span></article>
+            <article><strong>35</strong><span>test cases</span></article>
+          </div>
         </div>
-      </div>
+        <figure class="hero-media glass">
+          <img src="assets/gesture-point.jpeg" alt="Gesture control application detecting a pointing hand">
+          <figcaption><span>Live landmark tracking</span><strong>OpenCV preview with MediaPipe hand geometry</strong></figcaption>
+        </figure>
+      </section>
 
-      <div class="preview-panel" aria-label="Application preview">
-        <img src="../captures/gesture_20260430_013258_262058.png" alt="Hand gesture control application preview">
-        <div class="meter">
-          <span>Tracking</span>
-          <strong>30 FPS</strong>
+      <section class="section intro-grid" id="overview">
+        <div class="section-heading"><p class="kicker">Project Overview</p><h2>Designed as a complete interaction layer, not only a gesture detector.</h2></div>
+        <div class="overview-card glass"><p>The system processes each camera frame, detects hand keypoints, classifies the user’s gesture, smooths noisy predictions, and triggers the selected computer action only when the gesture is stable enough. Safety controls such as preview mode, open-palm unlock, hold-fist lock, and cooldowns make the application suitable for live use.</p></div>
+      </section>
+
+      <section class="section feature-section" id="features">
+        <div class="section-heading"><p class="kicker">Core Capabilities</p><h2>Natural gestures mapped to everyday workflows.</h2></div>
+        <div class="feature-grid">
+          <article class="glass feature-card"><span>01</span><h3>Cursor Control</h3><p>Point to move the cursor, pinch to click, hold pinch to drag, use peace sign to scroll, and middle pinch for right-click.</p></article>
+          <article class="glass feature-card"><span>02</span><h3>Volume Control</h3><p>Thumb-index distance is mapped to system volume, creating an intuitive physical control for audio adjustment.</p></article>
+          <article class="glass feature-card"><span>03</span><h3>Shortcut Modes</h3><p>Gesture mappings support screenshots, media controls, browser tabs, and presentation navigation without touching the keyboard.</p></article>
+          <article class="glass feature-card"><span>04</span><h3>File Transfer</h3><p>Share mode starts a local transfer server and displays a QR code so a phone or another computer can receive the file over Wi-Fi.</p></article>
         </div>
-      </div>
-    </section>
+      </section>
 
-    <section class="stats" aria-label="Project highlights">
-      <article>
-        <span>7</span>
-        <p>Control modes</p>
-      </article>
-      <article>
-        <span>21</span>
-        <p>Hand landmarks</p>
-      </article>
-      <article>
-        <span>35</span>
-        <p>Automated tests</p>
-      </article>
-      <article>
-        <span>1</span>
-        <p>Packaged Windows app</p>
-      </article>
-    </section>
+      <section class="section pipeline-section" id="pipeline">
+        <div class="section-heading"><p class="kicker">System Architecture</p><h2>Frame by frame, gesture by gesture.</h2></div>
+        <div class="timeline">
+          <article class="glass"><b>1</b><span>Camera Capture</span><p>OpenCV reads the webcam stream and prepares each frame for processing.</p></article>
+          <article class="glass"><b>2</b><span>Hand Landmark Detection</span><p>MediaPipe detects 21 keypoints that describe the hand’s pose and position.</p></article>
+          <article class="glass"><b>3</b><span>Gesture Classification</span><p>Finger states and landmark distances classify point, pinch, peace, palm, fist, and mode-switch gestures.</p></article>
+          <article class="glass"><b>4</b><span>Stability Layer</span><p>Label smoothing, confidence checks, cooldowns, and lock states reduce accidental triggers.</p></article>
+          <article class="glass"><b>5</b><span>Action Engine</span><p>The final stable gesture is routed to cursor, volume, browser, presentation, media, shortcut, or sharing actions.</p></article>
+        </div>
+      </section>
 
-    <section class="split">
-      <div>
-        <p class="eyebrow">How it works</p>
-        <h2>From camera frame to computer action</h2>
-      </div>
-      <div class="pipeline">
-        <article><b>1</b><span>Webcam captures frame</span></article>
-        <article><b>2</b><span>MediaPipe detects hand landmarks</span></article>
-        <article><b>3</b><span>Gesture rules classify pose and pinch distance</span></article>
-        <article><b>4</b><span>Smoothing and cooldown remove accidental triggers</span></article>
-        <article><b>5</b><span>Action engine controls mouse, keyboard, volume, browser, or sharing</span></article>
-      </div>
-    </section>
+      <section class="section gallery-section">
+        <div class="section-heading"><p class="kicker">Project Gallery</p><h2>Live recognition states captured during testing.</h2></div>
+        <div class="gallery">
+          <figure class="glass"><img src="assets/gesture-three-fingers.jpeg" alt="Three finger gesture recognition"><figcaption>Mode switching</figcaption></figure>
+          <figure class="glass"><img src="assets/gesture-peace.jpeg" alt="Peace gesture recognition"><figcaption>Scroll and media gestures</figcaption></figure>
+          <figure class="glass"><img src="assets/gesture-fist.jpeg" alt="Fist gesture recognition"><figcaption>Hold-to-lock safety state</figcaption></figure>
+          <figure class="glass"><img src="assets/gesture-pinch.jpeg" alt="Pinch gesture recognition"><figcaption>Pinch-based action control</figcaption></figure>
+        </div>
+      </section>
 
-    <section id="gestures">
-      <div class="section-head">
-        <p class="eyebrow">Gesture map</p>
-        <h2>Simple gestures, useful actions</h2>
-      </div>
-      <div class="gesture-grid">
-        <article><span>Open palm</span><b>Unlock controls</b></article>
-        <article><span>Hold fist</span><b>Lock safely</b></article>
-        <article><span>Three fingers</span><b>Change mode</b></article>
-        <article><span>Point</span><b>Move cursor / next / copy link</b></article>
-        <article><span>Pinch</span><b>Click, screenshot, close tab, share</b></article>
-        <article><span>Peace</span><b>Scroll, play/pause, open share page</b></article>
-        <article><span>Middle pinch</span><b>Right click, mute, reopen tab</b></article>
-      </div>
-    </section>
+      <section class="section applied-section">
+        <div class="section-heading"><p class="kicker">Applied AI Positioning</p><h2>Model integration with a production-style control layer.</h2></div>
+        <div class="applied-grid">
+          <article class="glass"><h3>Model role</h3><p>MediaPipe’s pretrained hand landmark model identifies keypoints on the hand in real time. These landmarks provide the visual understanding required for gesture recognition.</p></article>
+          <article class="glass"><h3>Application layer</h3><p>The project adds gesture logic, temporal smoothing, confidence thresholds, calibration, safety states, OS automation, event logging, file transfer, and packaging.</p></article>
+          <article class="glass"><h3>Training statement</h3><p>The base model was not trained from scratch. The project focuses on applying a pretrained vision model and engineering the decision layer that turns predictions into a usable interface.</p></article>
+        </div>
+      </section>
 
-    <section class="split" id="ai">
-      <div>
-        <p class="eyebrow">Applied AI answer</p>
-        <h2>Yes, this fits Applied AI, but be honest about training.</h2>
-      </div>
-      <div class="note-list">
-        <p><b>Did I train the model?</b> No. The project uses a pretrained MediaPipe hand landmark model.</p>
-        <p><b>Where is the AI?</b> The AI model detects hand keypoints in real time from camera images.</p>
-        <p><b>What did I build?</b> The practical AI application around it: gesture classification, smoothing, action mapping, safety lock, calibration, file sharing, and packaging.</p>
-        <p><b>How to phrase it:</b> I integrated a pretrained computer vision model and engineered the decision layer that turns predictions into real computer actions.</p>
-      </div>
-    </section>
-
-    <section id="script">
-      <div class="section-head">
-        <p class="eyebrow">Demo guide</p>
-        <h2>Say it simply</h2>
-      </div>
-      <div class="script-grid">
-        <article>
-          <h3>Opening</h3>
-          <p>I built a real-time hand gesture system that lets a user control a computer without touching the mouse or keyboard.</p>
-        </article>
-        <article>
-          <h3>Show tracking</h3>
-          <p>This overlay shows the detected hand landmarks, current gesture, FPS, and whether actions are active or locked.</p>
-        </article>
-        <article>
-          <h3>Show controls</h3>
-          <p>I unlock with an open palm, move the cursor by pointing, pinch to click, and switch modes with three fingers.</p>
-        </article>
-        <article>
-          <h3>Show transfer</h3>
-          <p>In share mode, the app starts a local transfer server and shows a QR code. The phone scans it and downloads the file.</p>
-        </article>
-        <article>
-          <h3>Explain safety</h3>
-          <p>I added smoothing, cooldowns, preview mode, and a hold-to-lock gesture so random hand motion does not trigger actions.</p>
-        </article>
-        <article>
-          <h3>Close</h3>
-          <p>The goal was to turn AI perception into a practical interface that feels natural, fast, and useful.</p>
-        </article>
-      </div>
-    </section>
-
-    <section id="run" class="run-panel">
-      <div>
-        <p class="eyebrow">Run command</p>
-        <h2>Use this for the live demo</h2>
-      </div>
-      <pre><code id="run-command">python -m gesture_control --camera -1 --enable-actions --profile config/my_profile.json --share-path "C:\Users\Srishti Pandey\Downloads\demo.pdf" --show-debug --ui-scale 0.5</code></pre>
-      <button class="button primary" id="copy-command" type="button">Copy command</button>
-    </section>
-  </main>
-
+      <section class="section demo-section" id="demo">
+        <div class="demo-card glass">
+          <div><p class="kicker">Live Demo Command</p><h2>Run the complete system.</h2><p>Use this command for a full demonstration with real actions, tuned profile, debug overlay, and file-sharing support.</p></div>
+          <pre><code id="run-command">python -m gesture_control --camera -1 --enable-actions --profile config/my_profile.json --share-path "C:\Users\Srishti Pandey\Downloads\demo.pdf" --show-debug --ui-scale 0.5</code></pre>
+          <button class="button primary" id="copy-command" type="button">Copy command</button>
+        </div>
+        <aside class="demo-steps glass">
+          <h3>Recommended demonstration order</h3>
+          <ol><li>Open palm to unlock controls.</li><li>Point to move the cursor.</li><li>Pinch to click or drag.</li><li>Switch modes and show volume control.</li><li>Open share mode and scan the QR code.</li></ol>
+        </aside>
+      </section>
+    </main>
+  </div>
   <script src="app.js"></script>
 </body>
 </html>
