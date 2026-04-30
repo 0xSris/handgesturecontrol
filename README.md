@@ -121,7 +121,7 @@ python -m gesture_control --camera -1 --enable-actions --profile config/my_profi
 File transfer demo:
 
 ```powershell
-python -m gesture_control --camera -1 --enable-actions --profile config/my_profile.json --share-path "C:\Users\Srishti Pandey\Downloads\demo.pdf" --show-debug --ui-scale 0.5
+python -m gesture_control --camera -1 --enable-actions --profile config/my_profile.json --share-path "path\to\demo.pdf" --show-debug --ui-scale 0.5
 ```
 
 ## Presentation Frontend
@@ -139,7 +139,7 @@ The frontend includes the project overview, architecture, feature summary, image
 To share one file with a phone:
 
 ```powershell
-python -m gesture_control --camera -1 --enable-actions --share-path "C:\Users\Srishti Pandey\Downloads\demo.pdf" --show-debug
+python -m gesture_control --camera -1 --enable-actions --share-path "path\to\demo.pdf" --show-debug
 ```
 
 The app starts a local Wi-Fi server and shows a QR code. Scanning the QR code from a phone opens the download flow. The phone and laptop must be connected to the same Wi-Fi network.
@@ -198,3 +198,4 @@ tests/                   Automated tests
 ## Resume Summary
 
 Built a real-time gesture-controlled computer interaction system using OpenCV and MediaPipe, enabling cursor movement, volume control, shortcuts, browser actions, presentation control, media navigation, and QR-based local file transfer. Engineered gesture classification, temporal smoothing, calibration, safety locks, event logging, and Windows packaging for a reliable Applied AI user experience.
+

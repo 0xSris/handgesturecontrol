@@ -1,4 +1,4 @@
-# Troubleshooting
+﻿# Troubleshooting
 
 ## Gestures show correctly, but actions do not fire
 
@@ -67,7 +67,7 @@ Point/peace open the default browser first. After the browser is focused, pinch 
 Start with a folder:
 
 ```powershell
-python -m gesture_control --camera -1 --enable-actions --share-path "C:\Users\Srishti Pandey\Downloads"
+python -m gesture_control --camera -1 --enable-actions --share-path "path\to\folder"
 ```
 
 Put your phone/other PC on the same Wi-Fi and open the URL shown in the overlay. If the page does not load, allow Python/GestureControl through Windows Firewall for private networks.
@@ -91,3 +91,4 @@ powershell -ExecutionPolicy Bypass -File scripts/build_exe.ps1
 ```
 
 The executable is written to `dist/GestureControl/GestureControl.exe`.
+

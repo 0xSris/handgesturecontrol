@@ -5,7 +5,7 @@
 Use one exact file for the phone transfer demo. Keep the phone and laptop on the same Wi-Fi.
 
 ```powershell
-python -m gesture_control --camera -1 --enable-actions --profile config/my_profile.json --share-path "C:\Users\Srishti Pandey\Downloads\demo.pdf" --show-debug --ui-scale 0.5
+python -m gesture_control --camera -1 --enable-actions --profile config/my_profile.json --share-path "path\to\demo.pdf" --show-debug --ui-scale 0.5
 ```
 
 ## Simple Demo Flow
@@ -33,4 +33,5 @@ python -m gesture_control --camera -1 --enable-actions --profile config/my_profi
 - Press `c`, `v`, `x`, `m`, `b`, `p`, or `h` to force a mode.
 - Press `t` to restart the share server.
 - Press `q` or `Esc` to exit.
+
 
