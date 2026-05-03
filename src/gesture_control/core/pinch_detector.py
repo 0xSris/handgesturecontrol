@@ -3,8 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import Enum
 
-PINCH_ENTER_THRESHOLD = 0.04  # Empirical normalized thumb-index distance for intentional contact.
-PINCH_EXIT_THRESHOLD = 0.07  # Wider release boundary prevents oscillation flicker.
+PINCH_ENTER_THRESHOLD = 0.085  # Practical webcam threshold for intentional thumb-index contact.
+PINCH_EXIT_THRESHOLD = 0.12  # Wider release boundary prevents oscillation flicker.
 MIN_CLICK_HOLD_SECONDS = 0.08  # Ignores accidental fingertip brushes.
 CLICK_COOLDOWN_SECONDS = 0.30  # Prevents double-click bursts after one release.
 DRAG_HOLD_SECONDS = 0.60  # Long enough to separate dragging from normal clicking.

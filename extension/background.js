@@ -1,9 +1,9 @@
 chrome.runtime.onInstalled.addListener(() => {
   chrome.storage.sync.set({
     gestureControl: {
-      cursor_speed: 2.4,
-      alpha: 0.55,
-      dead_zone_radius: 0.018,
+      cursor_speed: 2.1,
+      alpha: 0.72,
+      dead_zone_radius: 0.004,
       enabled: false
     }
   });

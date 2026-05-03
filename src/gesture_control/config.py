@@ -24,10 +24,10 @@ class RuntimeConfig:
         default_factory=lambda: {
             "min_cutoff": 1.0,
             "beta": 0.1,
-            "cursor_alpha": 0.55,
-            "dead_zone_radius": 0.018,
-            "base_speed": 2.4,
-            "acceleration_exponent": 1.15,
+            "cursor_alpha": 0.72,
+            "dead_zone_radius": 0.004,
+            "base_speed": 2.1,
+            "acceleration_exponent": 1.0,
         }
     )
     gesture_debounce: dict[str, int] = field(
@@ -50,15 +50,15 @@ class RuntimeConfig:
     drag_hold_seconds: float = 0.45
     pinch: dict[str, Any] = field(
         default_factory=lambda: {
-            "enter_threshold": 0.04,
-            "exit_threshold": 0.07,
+            "enter_threshold": 0.085,
+            "exit_threshold": 0.12,
             "min_click_hold_seconds": 0.08,
             "click_cooldown_seconds": 0.30,
             "drag_hold_seconds": 0.60,
         }
     )
-    pinch_enter_threshold: float = 0.04
-    pinch_exit_threshold: float = 0.07
+    pinch_enter_threshold: float = 0.085
+    pinch_exit_threshold: float = 0.12
     min_click_hold_seconds: float = 0.08
     click_cooldown_seconds: float = 0.30
     lock_hold_seconds: float = 0.8

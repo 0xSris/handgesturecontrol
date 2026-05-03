@@ -383,12 +383,18 @@ class GestureActionEngine:
         return self.status
 
     def _handle_cursor_mode(self, label: str, gesture: GestureResult, now: float) -> None:
-        if label in {"point", "pinch", "middle_pinch", "thumbs_up"}:
+        if label not in {"no_hand"}:
             x, y = self._cursor_engine.update(gesture.index_position)
             self._backend.move_cursor(x, y)
             self._last_action = "move cursor"
 
-        pinch_distance = min(gesture.pinch_distance, self._config.pinch_enter_threshold) if label == "pinch" else 1.0
+        pinch_distance = gesture.pinch_distance
+        if label != "pinch":
+            pinch_distance = (
+                pinch_distance
+                if self._pinch_detector.phase.value == "open" and pinch_distance <= self._config.pinch_enter_threshold
+                else 1.0
+            )
         pinch_event = self._pinch_detector.update(pinch_distance, now)
         if pinch_event.drag_start and not self._dragging:
             self._backend.mouse_down()
@@ -397,7 +403,7 @@ class GestureActionEngine:
         if pinch_event.drag_release:
             self._release_drag()
             self._mark_trigger(now, "drop")
-        if pinch_event.click_release and self._ready(now):
+        if pinch_event.click_release:
             self._backend.click()
             self._mark_trigger(now, "click")
 

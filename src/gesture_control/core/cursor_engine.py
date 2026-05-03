@@ -3,10 +3,10 @@ from __future__ import annotations
 from dataclasses import dataclass
 from math import hypot
 
-CURSOR_ALPHA = 0.55  # Responsive enough for live cursor use while still damping jitter.
-DEAD_ZONE_RADIUS = 0.018  # Small tremor guard without freezing normal pointing.
-BASE_SPEED = 2.4  # Restores practical screen travel after acceleration shaping.
-ACCELERATION_EXPONENT = 1.15  # Gentler curve keeps slow motion precise without feeling stuck.
+CURSOR_ALPHA = 0.72  # Direct cursor control for live desktop use with mild smoothing.
+DEAD_ZONE_RADIUS = 0.004  # Ignores fingertip tremor without blocking intentional movement.
+BASE_SPEED = 2.1  # Maps the comfortable center camera area across the whole screen.
+ACCELERATION_EXPONENT = 1.0  # Kept configurable; direct mapping is more controllable for cursor work.
 EDGE_SLOW_ZONE = 0.05  # Last 5 percent of the screen gets slower for controllable edges.
 
 
@@ -36,22 +36,16 @@ class CursorEngine:
             self._previous_hand = index_position
             return self._cursor
 
-        neutral_x, neutral_y = self.config.neutral_position
-        if hypot(raw_x - neutral_x, raw_y - neutral_y) < self.config.dead_zone_radius:
-            self._previous_hand = index_position
-            return self._cursor
-
         prev_x, prev_y = self._previous_hand if self._previous_hand is not None else index_position
-        velocity = min(hypot(raw_x - prev_x, raw_y - prev_y) * 12.0, 1.0)
-        speed = self.config.base_speed * (velocity ** self.config.acceleration_exponent)
-        speed = min(max(speed, 0.18), self.config.base_speed)
+        if hypot(raw_x - prev_x, raw_y - prev_y) < self.config.dead_zone_radius:
+            return self._cursor
 
         cursor_x, cursor_y = self._cursor
         target_x = 0.5 + (raw_x - 0.5) * self.config.base_speed
         target_y = 0.5 + (raw_y - 0.5) * self.config.base_speed
         alpha = min(max(self.config.alpha, 0.0), 1.0)
-        next_x = cursor_x + alpha * speed * (target_x - cursor_x)
-        next_y = cursor_y + alpha * speed * (target_y - cursor_y)
+        next_x = cursor_x + alpha * (target_x - cursor_x)
+        next_y = cursor_y + alpha * (target_y - cursor_y)
 
         next_x, next_y = self._apply_soft_edges(next_x, next_y, cursor_x, cursor_y)
         self._cursor = (min(max(next_x, 0.0), 1.0), min(max(next_y, 0.0), 1.0))
