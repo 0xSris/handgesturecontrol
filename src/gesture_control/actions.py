@@ -1,7 +1,7 @@
 ﻿from __future__ import annotations
 
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from enum import Enum
 
 from .config import RuntimeConfig
@@ -28,6 +28,7 @@ class ActionStatus:
     dragging: bool = False
     lock_progress: float = 0.0
     preview_note: str = ""
+    fsm_state: str = "LOCKED"
 
 
 class AutomationBackend:
@@ -193,12 +194,32 @@ class GestureActionEngine:
         self._active = False
         self._last_action = "preview" if not config.enable_actions else "locked"
         self._last_trigger_at = 0.0
-        self._cursor_x: float | None = None
-        self._cursor_y: float | None = None
         self._last_volume_percent: int | None = None
-        self._pinch_started_at: float | None = None
         self._fist_started_at: float | None = None
         self._dragging = False
+        from .core.cursor_engine import CursorConfig, CursorEngine
+        from .core.gesture_fsm import GestureFSM
+        from .core.pinch_detector import PinchConfig, PinchDetector
+
+        smoothing = config.smoothing
+        self._cursor_engine = CursorEngine(
+            CursorConfig(
+                alpha=float(smoothing.get("cursor_alpha", config.smoothing_alpha)),
+                dead_zone_radius=float(smoothing.get("dead_zone_radius", config.cursor_dead_zone)),
+                base_speed=float(smoothing.get("base_speed", config.cursor_sensitivity)),
+                acceleration_exponent=float(smoothing.get("acceleration_exponent", 1.5)),
+            )
+        )
+        self._pinch_detector = PinchDetector(
+            PinchConfig(
+                enter_threshold=config.pinch_enter_threshold,
+                exit_threshold=config.pinch_exit_threshold,
+                min_click_hold_seconds=config.min_click_hold_seconds,
+                click_cooldown_seconds=config.click_cooldown_seconds,
+                drag_hold_seconds=config.drag_hold_seconds,
+            )
+        )
+        self._fsm = GestureFSM(ControlMode.CURSOR, config.gesture_debounce, default_frames=1)
 
     @property
     def status(self) -> ActionStatus:
@@ -216,10 +237,14 @@ class GestureActionEngine:
             dragging=self._dragging,
             lock_progress=lock_progress,
             preview_note="" if self._config.enable_actions else "preview only: add --enable-actions for real keyboard/browser controls",
+            fsm_state=self._fsm.state.value,
         )
 
     def update(self, label: str, gesture: GestureResult) -> ActionStatus:
         now = self._clock()
+        fsm_event = self._fsm.update(label, gesture.confidence)
+        if fsm_event.transition is not None:
+            self._last_action = f"state:{fsm_event.transition[1].value}"
 
         if label != "fist":
             self._fist_started_at = None
@@ -227,6 +252,7 @@ class GestureActionEngine:
         if label == "open_palm":
             self._fist_started_at = None
             self._active = True
+            self._fsm.force_unlock()
             self._last_action = "unlocked"
             return self.status
 
@@ -240,6 +266,7 @@ class GestureActionEngine:
 
             if now - self._fist_started_at >= self._config.lock_hold_seconds:
                 self._active = False
+                self._fsm.force_lock()
                 self._fist_started_at = None
                 self._last_action = "locked"
             else:
@@ -248,6 +275,7 @@ class GestureActionEngine:
 
         if self._ready(now) and label == "three_fingers":
             self._cycle_mode()
+            self._fsm.set_mode(self._mode)
             self._mark_trigger(now, f"mode:{self._mode.value}")
             return self.status
 
@@ -275,44 +303,103 @@ class GestureActionEngine:
     def handle_keyboard(self, key: int) -> ActionStatus:
         if key == ord("u"):
             self._active = True
+            self._fsm.force_unlock()
             self._last_action = "unlocked by key"
         elif key == ord("l"):
             self._release_drag()
             self._active = False
+            self._fsm.force_lock()
             self._last_action = "locked by key"
         elif key == ord("c"):
             self._mode = ControlMode.CURSOR
+            self._fsm.set_mode(self._mode)
             self._last_action = "mode:cursor"
         elif key == ord("v"):
             self._mode = ControlMode.VOLUME
+            self._fsm.set_mode(self._mode)
             self._last_action = "mode:volume"
         elif key == ord("x"):
             self._mode = ControlMode.SHORTCUTS
+            self._fsm.set_mode(self._mode)
             self._last_action = "mode:shortcuts"
         elif key == ord("m"):
             self._mode = ControlMode.MEDIA
+            self._fsm.set_mode(self._mode)
             self._last_action = "mode:media"
         elif key == ord("b"):
             self._mode = ControlMode.BROWSER
+            self._fsm.set_mode(self._mode)
             self._last_action = "mode:browser"
         elif key == ord("p"):
             self._mode = ControlMode.PRESENTATION
+            self._fsm.set_mode(self._mode)
             self._last_action = "mode:presentation"
         elif key == ord("h"):
             self._mode = ControlMode.SHARE
+            self._fsm.set_mode(self._mode)
             self._last_action = "mode:share"
+        return self.status
+
+    def force_lock(self) -> ActionStatus:
+        self._release_drag()
+        self._active = False
+        self._fsm.force_lock()
+        self._last_action = "locked remotely"
+        return self.status
+
+    def toggle_active(self) -> ActionStatus:
+        if self._active:
+            return self.force_lock()
+        self._active = True
+        self._fsm.force_unlock()
+        self._last_action = "unlocked remotely"
+        return self.status
+
+    def set_mode(self, mode: ControlMode) -> ActionStatus:
+        self._mode = mode
+        self._fsm.set_mode(mode)
+        self._last_action = f"mode:{mode.value}"
+        return self.status
+
+    def set_live_param(self, key: str, value: object) -> ActionStatus:
+        try:
+            number = float(value)
+        except (TypeError, ValueError):
+            return self.status
+        if key in {"alpha", "cursor_alpha"}:
+            self._cursor_engine.config = replace(self._cursor_engine.config, alpha=number)
+        elif key in {"dead_zone", "dead_zone_radius"}:
+            self._cursor_engine.config = replace(self._cursor_engine.config, dead_zone_radius=number)
+        elif key in {"cursor_speed", "base_speed"}:
+            self._cursor_engine.config = replace(self._cursor_engine.config, base_speed=number)
+        self._last_action = f"param:{key}"
+        return self.status
+
+    def handle_hand_missing(self, elapsed_seconds: float) -> ActionStatus:
+        if elapsed_seconds >= 0.5:
+            self._reset_pinch()
+            self._fsm.update("no_hand", 0.0)
+            self._last_action = "waiting for hand"
         return self.status
 
     def _handle_cursor_mode(self, label: str, gesture: GestureResult, now: float) -> None:
         if label in {"point", "pinch", "middle_pinch", "thumbs_up"}:
-            x, y = self._scaled_pointer(gesture.index_position)
+            x, y = self._cursor_engine.update(gesture.index_position)
             self._backend.move_cursor(x, y)
             self._last_action = "move cursor"
 
-        if label == "pinch":
-            self._handle_primary_pinch(now)
-        else:
-            self._finish_primary_pinch(now)
+        pinch_distance = min(gesture.pinch_distance, self._config.pinch_enter_threshold) if label == "pinch" else 1.0
+        pinch_event = self._pinch_detector.update(pinch_distance, now)
+        if pinch_event.drag_start and not self._dragging:
+            self._backend.mouse_down()
+            self._dragging = True
+            self._last_action = "dragging"
+        if pinch_event.drag_release:
+            self._release_drag()
+            self._mark_trigger(now, "drop")
+        if pinch_event.click_release and self._ready(now):
+            self._backend.click()
+            self._mark_trigger(now, "click")
 
         if label in {"middle_pinch", "thumbs_up"} and self._ready(now):
             self._backend.right_click()
@@ -414,25 +501,6 @@ class GestureActionEngine:
             self._backend.open_url(url)
             self._mark_trigger(now, "shared link")
 
-    def _scaled_pointer(self, point: tuple[float, float]) -> tuple[float, float]:
-        x, y = point
-        sensitivity = max(self._config.cursor_sensitivity, 0.1)
-        x = 0.5 + (x - 0.5) * sensitivity
-        y = 0.5 + (y - 0.5) * sensitivity
-
-        alpha = 0.35
-        if self._cursor_x is None or self._cursor_y is None:
-            self._cursor_x, self._cursor_y = x, y
-        else:
-            if abs(x - self._cursor_x) < self._config.cursor_dead_zone:
-                x = self._cursor_x
-            if abs(y - self._cursor_y) < self._config.cursor_dead_zone:
-                y = self._cursor_y
-            self._cursor_x = alpha * x + (1.0 - alpha) * self._cursor_x
-            self._cursor_y = alpha * y + (1.0 - alpha) * self._cursor_y
-
-        return (self._cursor_x, self._cursor_y)
-
     def _pinch_to_percent(self, pinch_distance: float) -> int:
         low = self._config.volume_min_pinch
         high = max(self._config.volume_max_pinch, low + 0.001)
@@ -443,6 +511,7 @@ class GestureActionEngine:
         modes = list(ControlMode)
         index = modes.index(self._mode)
         self._mode = modes[(index + 1) % len(modes)]
+        self._fsm.set_mode(self._mode)
 
     def _ready(self, now: float) -> bool:
         return now - self._last_trigger_at >= self._config.action_cooldown_seconds
@@ -451,37 +520,14 @@ class GestureActionEngine:
         self._last_trigger_at = now
         self._last_action = action
 
-    def _handle_primary_pinch(self, now: float) -> None:
-        if self._pinch_started_at is None:
-            self._pinch_started_at = now
-            self._last_action = "pinch ready"
-            return
-
-        held_for = now - self._pinch_started_at
-        if not self._dragging and held_for >= self._config.drag_hold_seconds:
-            self._backend.mouse_down()
-            self._dragging = True
-            self._last_action = "dragging"
-
-    def _finish_primary_pinch(self, now: float) -> None:
-        if self._pinch_started_at is None:
-            return
-
-        if self._dragging:
-            self._release_drag()
-            self._mark_trigger(now, "drop")
-        elif self._ready(now):
-            self._backend.click()
-            self._mark_trigger(now, "click")
-
-        self._reset_pinch()
-
     def _release_drag(self) -> None:
         if self._dragging:
             self._backend.mouse_up()
             self._dragging = False
 
     def _reset_pinch(self) -> None:
-        self._pinch_started_at = None
+        event = self._pinch_detector.reset()
+        if event.drag_release:
+            self._release_drag()
 
 

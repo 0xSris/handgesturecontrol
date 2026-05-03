@@ -7,12 +7,14 @@ from dataclasses import replace
 from .actions import ActionStatus, GestureActionEngine
 from .calibration import CalibrationSession, CalibrationStatus
 from .config import RuntimeConfig, load_profile
+from .core.performance import PerformanceMonitor
 from .events import EventLogger
 from .gestures import GestureResult, classify_gesture
 from .hand_tracker import HandTracker
 from .media import RecordingSession, RecordingStatus, list_available_cameras, resolve_camera_index, save_snapshot
 from .share import ShareServer, ShareStatus
 from .smoothing import LabelSmoother
+from .server.ws_server import GestureWebSocketServer, NullWebSocketServer
 
 _QR_CACHE: dict[tuple[str, int], object] = {}
 
@@ -46,6 +48,21 @@ def run(config: RuntimeConfig) -> None:
     action_engine = GestureActionEngine(config)
     recorder = RecordingSession(config.record_output, config.record_fps)
     event_logger = EventLogger(config.event_log)
+    perf = PerformanceMonitor()
+    extension = config.extension
+    ws_server = (
+        GestureWebSocketServer(
+            action_engine,
+            host=str(extension.get("host", "127.0.0.1")),
+            port=int(extension.get("port", 7433)),
+            interval_seconds=float(extension.get("broadcast_interval_ms", 100)) / 1000.0,
+            on_toggle=lambda: action_engine.toggle_active(),
+            debug=config.show_debug,
+        )
+        if config.enable_extension
+        else NullWebSocketServer()
+    )
+    ws_server.start()
     calibration = (
         CalibrationSession(config.calibration_output, config.calibration_samples)
         if config.calibration_output
@@ -65,10 +82,14 @@ def run(config: RuntimeConfig) -> None:
     cv2.resizeWindow(window_name, config.display_width, config.display_height)
     previous_time = time.perf_counter()
     fps = 0.0
+    no_hand_since: float | None = None
+    action_status = action_engine.status
+    last_perf_warning = ""
 
     try:
         while True:
-            ok, frame = capture.read()
+            with perf.stage("capture"):
+                ok, frame = capture.read()
             if not ok:
                 break
             frame = resize_for_display(cv2, frame, config.display_width, config.display_height)
@@ -77,37 +98,52 @@ def run(config: RuntimeConfig) -> None:
                 frame = cv2.flip(frame, 1)
 
             rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            hand = tracker.process_rgb(rgb)
+            with perf.stage("mediapipe"):
+                hand = tracker.process_rgb(rgb)
             gesture = GestureResult("no_hand", 0.0, (False, False, False, False, False), 1.0, 1.0, (0.5, 0.5), (0.5, 0.5))
             stable_label = "no_hand"
+            action_label = "no_hand"
 
             if hand is None:
                 label_smoother.reset()
+                if no_hand_since is None:
+                    no_hand_since = time.perf_counter()
+                missing_for = time.perf_counter() - no_hand_since
+                action_status = action_engine.handle_hand_missing(missing_for)
             else:
-                gesture = classify_gesture(
-                    hand.landmarks,
-                    hand.handedness,
-                    config.pinch_threshold,
-                    config.middle_pinch_threshold,
-                )
+                no_hand_since = None
+                with perf.stage("classification"):
+                    gesture = classify_gesture(
+                        hand.landmarks,
+                        hand.handedness,
+                        config.pinch_threshold,
+                        config.middle_pinch_threshold,
+                    )
                 stable_label = label_smoother.update(gesture.name)
                 if calibration is not None and not calibration.saved:
                     calibration.update(gesture, config)
                 if config.draw_landmarks:
                     draw_landmarks(cv2, frame, hand.raw_landmarks, tracker.connections)
 
-            action_label = gesture.name if gesture.confidence >= config.action_confidence else stable_label
-            action_status = action_engine.update(action_label, gesture)
+                action_label = gesture.name if gesture.confidence >= config.action_confidence else stable_label
+                with perf.stage("action"):
+                    action_status = action_engine.update(action_label, gesture)
             event_logger.log_if_changed(action_label, action_status)
             now = time.perf_counter()
             frame_delta = now - previous_time
             previous_time = now
             if frame_delta > 0:
                 fps = 0.9 * fps + 0.1 * (1.0 / frame_delta)
+            with perf.stage("websocket"):
+                ws_server.update_state(action_status, stable_label, fps, perf.averages() if config.show_debug else None)
+            warnings = perf.warnings()
+            if warnings and warnings[0] != last_perf_warning:
+                last_perf_warning = warnings[0]
+                event_logger.log_warning(last_perf_warning)
 
             draw_overlay(cv2, frame, stable_label, gesture, fps, action_status, recorder.status, config.ui_scale)
             if config.show_debug:
-                draw_debug(cv2, frame, action_label, gesture, config.ui_scale)
+                draw_debug(cv2, frame, action_label, gesture, action_status, config, perf.averages(), config.ui_scale)
             if calibration is not None:
                 draw_calibration(cv2, frame, calibration.status, config.ui_scale)
             else:
@@ -135,6 +171,7 @@ def run(config: RuntimeConfig) -> None:
         capture.release()
         recorder.close()
         event_logger.close()
+        ws_server.stop()
         share_server.close()
         tracker.close()
         cv2.destroyAllWindows()
@@ -176,11 +213,11 @@ def draw_recording_indicator(cv2: object, frame: object, status: RecordingStatus
     cv2.putText(frame, "REC", (width - 78, height - 22), cv2.FONT_HERSHEY_SIMPLEX, 0.52, (238, 238, 238), 1)
 
 
-def draw_debug(cv2: object, frame: object, action_label: str, gesture: GestureResult, scale: float = 0.62) -> None:
+def draw_debug(cv2: object, frame: object, action_label: str, gesture: GestureResult, status: ActionStatus, config: RuntimeConfig, perf: dict[str, float], scale: float = 0.62) -> None:
     scale = clamp_scale(scale)
     height, _ = frame.shape[:2]
     panel_w = int(470 * scale)
-    panel_h = int(86 * scale)
+    panel_h = int(134 * scale)
     line = int(24 * scale)
     pad = int(16 * scale)
     y1 = max(height - panel_h - 18, 12)
@@ -189,6 +226,8 @@ def draw_debug(cv2: object, frame: object, action_label: str, gesture: GestureRe
     cv2.putText(frame, f"Action gesture: {action_label}", (12 + pad, y1 + line), cv2.FONT_HERSHEY_SIMPLEX, 0.52 * scale, (118, 180, 255), 1)
     cv2.putText(frame, f"Pinch i/m: {gesture.pinch_distance:.3f} / {gesture.middle_pinch_distance:.3f}", (12 + pad, y1 + line * 2), cv2.FONT_HERSHEY_SIMPLEX, 0.52 * scale, (238, 238, 238), 1)
     cv2.putText(frame, f"Fingers T-I-M-R-P: {fingers}", (12 + pad, y1 + line * 3), cv2.FONT_HERSHEY_SIMPLEX, 0.48 * scale, (238, 238, 238), 1)
+    cv2.putText(frame, f"FSM: {status.fsm_state}  OneEuro min/beta: {config.smoothing.get('min_cutoff', 1.0)} / {config.smoothing.get('beta', 0.1)}", (12 + pad, y1 + line * 4), cv2.FONT_HERSHEY_SIMPLEX, 0.42 * scale, (238, 238, 238), 1)
+    cv2.putText(frame, f"Perf ms: cap {perf.get('capture', 0):.1f} mp {perf.get('mediapipe', 0):.1f} cls {perf.get('classification', 0):.1f} act {perf.get('action', 0):.1f}", (12 + pad, y1 + line * 5), cv2.FONT_HERSHEY_SIMPLEX, 0.42 * scale, (238, 238, 238), 1)
 
 
 def draw_hints(cv2: object, frame: object, status: ActionStatus, scale: float = 0.62) -> None:
@@ -327,7 +366,8 @@ def parse_args() -> RuntimeConfig:
     parser.add_argument("--share-path", type=str, default=None, help="Folder or file to share over the local network.")
     parser.add_argument("--share-port", type=int, default=8765, help="Port for local file sharing.")
     parser.add_argument("--browser-home-url", type=str, default="https://www.google.com", help="URL opened by browser mode.")
-    parser.add_argument("--show-debug", action="store_true", help="Show raw gesture diagnostics on the preview.")
+    parser.add_argument("--show-debug", "--debug", action="store_true", help="Show raw gesture diagnostics on the preview.")
+    parser.add_argument("--enable-extension", action="store_true", help="Start the local Chrome extension WebSocket bridge.")
     parser.add_argument("--list-cameras", action="store_true", help="Probe and print available camera indexes, then exit.")
     parser.add_argument("--camera-probe-limit", type=int, default=5, help="Number of camera indexes to probe.")
     args = parser.parse_args()
@@ -363,6 +403,7 @@ def parse_args() -> RuntimeConfig:
         share_port=args.share_port,
         browser_home_url=args.browser_home_url,
         show_debug=args.show_debug,
+        enable_extension=args.enable_extension,
         list_cameras=args.list_cameras,
         camera_probe_limit=args.camera_probe_limit,
     )

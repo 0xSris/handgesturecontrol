@@ -46,7 +46,12 @@ class HandTracker:
             min_tracking_confidence=config.tracking_confidence,
         )
         self._hands = vision.HandLandmarker.create_from_options(options)
-        self._smoother = LandmarkSmoother(config.smoothing_alpha)
+        smoothing = config.smoothing
+        self._smoother = LandmarkSmoother(
+            alpha=config.smoothing_alpha,
+            min_cutoff=float(smoothing.get("min_cutoff", 1.0)),
+            beta=float(smoothing.get("beta", 0.1)),
+        )
         self._timestamp_ms = 0
 
     @property
@@ -71,13 +76,16 @@ class HandTracker:
             classification = result.handedness[0][0]
             handedness = classification.category_name
             score = classification.score
+        if score < 0.75:
+            self._smoother.reset()
+            return None
 
         points = [
             (landmark.x, landmark.y, landmark.z)
             for landmark in hand_landmarks
         ]
         return TrackedHand(
-            landmarks=self._smoother.update(points),
+            landmarks=self._smoother.update(points, 1.0 / 30.0),
             handedness=handedness,
             score=score,
             raw_landmarks=hand_landmarks,

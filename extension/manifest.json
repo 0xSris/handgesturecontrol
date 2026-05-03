@@ -1,0 +1,22 @@
+{
+  "manifest_version": 3,
+  "name": "Hand Gesture Control Panel",
+  "version": "1.0.0",
+  "description": "Local control panel for the desktop hand gesture controller.",
+  "permissions": ["storage", "activeTab"],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Gesture Control"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "commands": {
+    "toggle-gesture-control": {
+      "suggested_key": {
+        "default": "Alt+G"
+      },
+      "description": "Toggle gesture control"
+    }
+  }
+}

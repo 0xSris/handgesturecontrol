@@ -43,6 +43,21 @@ class EventLogger:
         )
         self._file.flush()
 
+    def log_warning(self, message: str) -> None:
+        if self.output_path is None:
+            return
+        self._ensure_open()
+        self._writer.writerow(
+            {
+                "timestamp": datetime.now().isoformat(timespec="seconds"),
+                "gesture": "performance",
+                "action": f"WARNING: {message}",
+                "mode": "system",
+                "active": False,
+            }
+        )
+        self._file.flush()
+
     def close(self) -> None:
         if self._file is not None:
             self._file.close()

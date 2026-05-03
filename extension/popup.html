@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Gesture Control</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: #0e1118;
+        color: #f4f7fb;
+      }
+      body {
+        width: 360px;
+        margin: 0;
+        padding: 16px;
+        background:
+          radial-gradient(circle at 10% 0%, rgba(77, 177, 255, 0.22), transparent 30%),
+          linear-gradient(145deg, #101722, #0b0d12);
+      }
+      h1 {
+        margin: 0 0 12px;
+        font-size: 20px;
+        font-weight: 750;
+      }
+      button {
+        border: 0;
+        border-radius: 10px;
+        color: inherit;
+        cursor: pointer;
+        font: inherit;
+      }
+      .toggle {
+        width: 100%;
+        padding: 16px;
+        font-size: 22px;
+        font-weight: 800;
+        background: #d13f3f;
+      }
+      .toggle.on {
+        background: #20a15b;
+      }
+      .start-app {
+        width: 100%;
+        margin-top: 10px;
+        padding: 12px;
+        background: #2d75ff;
+        font-weight: 750;
+      }
+      .start-app.hidden {
+        display: none;
+      }
+      .panel {
+        margin-top: 14px;
+        padding: 12px;
+        border: 1px solid rgba(255,255,255,.14);
+        border-radius: 14px;
+        background: rgba(255,255,255,.08);
+        box-shadow: 0 20px 45px rgba(0,0,0,.25);
+        backdrop-filter: blur(18px);
+      }
+      .status {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+      .badge {
+        padding: 8px 10px;
+        border-radius: 999px;
+        background: rgba(255,255,255,.11);
+        font-size: 12px;
+      }
+      .connection {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 10px;
+        font-size: 13px;
+        color: #cfd6e4;
+      }
+      .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: #d13f3f;
+      }
+      .dot.connected {
+        background: #20d174;
+      }
+      .modes {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+      }
+      .mode {
+        padding: 9px;
+        background: rgba(255,255,255,.11);
+      }
+      .mode.active {
+        background: #2d75ff;
+      }
+      label {
+        display: grid;
+        gap: 7px;
+        margin-top: 10px;
+        font-size: 12px;
+        color: #dce4f2;
+      }
+      input[type="range"] {
+        width: 100%;
+      }
+      .danger {
+        width: 100%;
+        margin-top: 12px;
+        padding: 12px;
+        background: #b92727;
+        font-weight: 750;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Gesture Control</h1>
+    <div class="connection"><span id="dot" class="dot"></span><span id="connection">Disconnected</span></div>
+    <button id="toggle" class="toggle">OFF</button>
+    <button id="startApp" class="start-app">Start Desktop App</button>
+    <section class="panel status">
+      <div class="badge">State: <strong id="state">LOCKED</strong></div>
+      <div class="badge">Mode: <strong id="mode">cursor</strong></div>
+      <div class="badge">FPS: <strong id="fps">0</strong></div>
+      <div class="badge">Gesture: <strong id="gesture">none</strong></div>
+    </section>
+    <section class="panel">
+      <div class="modes" id="modes"></div>
+    </section>
+    <section class="panel">
+      <label>Cursor speed <input id="cursor_speed" type="range" min="0.5" max="3" step="0.05"></label>
+      <label>Smoothing alpha <input id="alpha" type="range" min="0.05" max="0.9" step="0.05"></label>
+      <label>Dead zone radius <input id="dead_zone_radius" type="range" min="0" max="0.12" step="0.005"></label>
+    </section>
+    <button id="lock" class="danger">Emergency Lock</button>
+    <script src="popup.js"></script>
+  </body>
+</html>

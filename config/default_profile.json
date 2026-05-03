@@ -1,13 +1,42 @@
 {
   "cursor_sensitivity": 1.35,
   "cursor_dead_zone": 0.006,
+  "smoothing": {
+    "min_cutoff": 1.0,
+    "beta": 0.1,
+    "cursor_alpha": 0.3,
+    "dead_zone_radius": 0.04,
+    "base_speed": 1.35,
+    "acceleration_exponent": 1.5
+  },
+  "gesture_debounce": {
+    "point": 3,
+    "peace": 3,
+    "pinch": 3,
+    "thumbs_up": 3,
+    "three_fingers": 4,
+    "open_palm": 3,
+    "fist": 5
+  },
   "action_cooldown_seconds": 0.65,
-  "drag_hold_seconds": 0.45,
+  "drag_hold_seconds": 0.6,
   "lock_hold_seconds": 0.8,
+  "pinch": {
+    "enter_threshold": 0.04,
+    "exit_threshold": 0.07,
+    "min_click_hold_seconds": 0.08,
+    "click_cooldown_seconds": 0.3,
+    "drag_hold_seconds": 0.6
+  },
   "volume_min_pinch": 0.035,
   "volume_max_pinch": 0.24,
   "pinch_threshold": 0.075,
   "middle_pinch_threshold": 0.075,
+  "extension": {
+    "host": "127.0.0.1",
+    "port": 7433,
+    "broadcast_interval_ms": 100
+  },
   "shortcuts": {
     "point": ["alt", "tab"],
     "peace": ["playpause"],

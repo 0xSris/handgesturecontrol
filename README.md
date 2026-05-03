@@ -21,6 +21,7 @@ A real-time computer vision interface that lets users control a computer through
 - Safety controls including preview mode, open-palm unlock, hold-fist lock, cooldowns, and gesture smoothing.
 - Calibration profiles for sensitivity, pinch distance, and shortcut tuning.
 - Event logging, snapshots, recording support, and Windows executable packaging.
+- Optional Chrome control panel with live mode, FPS, lock, and sensitivity controls.
 - Polished local presentation frontend with day/night mode.
 
 ## Tech Stack
@@ -33,15 +34,17 @@ A real-time computer vision interface that lets users control a computer through
 - PyCAW
 - PyInstaller
 - HTML, CSS, and JavaScript
+- Chrome Extension Manifest V3
 
 ## How It Works
 
 1. OpenCV captures frames from the webcam.
 2. MediaPipe detects 21 hand landmarks in real time.
 3. The gesture layer calculates finger states and landmark distances.
-4. A smoothing layer filters unstable predictions.
-5. The action engine maps stable gestures to system actions.
-6. Safety rules prevent accidental triggering while controlling the computer.
+4. One Euro filtering and temporal smoothing reduce landmark jitter.
+5. A finite state machine debounces gestures and controls action safety.
+6. The action engine maps stable gestures to system actions.
+7. Safety rules prevent accidental triggering while controlling the computer.
 
 ## Gesture Controls
 
@@ -106,6 +109,14 @@ On the first run, the hand landmark model is cached in the `models/` folder.
 
 ## Run
 
+No-command launch:
+
+```text
+Double-click Start Gesture Control.bat
+```
+
+For file sharing, either double-click `Start Gesture Control Share.bat` and choose a file, or drag a file onto it.
+
 Preview mode:
 
 ```powershell
@@ -122,6 +133,34 @@ File transfer demo:
 
 ```powershell
 python -m gesture_control --camera -1 --enable-actions --profile config/my_profile.json --share-path "path\to\demo.pdf" --show-debug --ui-scale 0.5
+```
+
+Chrome extension bridge:
+
+```powershell
+python -m gesture_control --camera -1 --enable-actions --enable-extension --profile config/default_profile.json --show-debug
+```
+
+Then open `chrome://extensions`, enable Developer mode, choose **Load unpacked**, and select the `extension` folder.
+
+To let the extension start the desktop app, run this once:
+
+```text
+Install Extension Launcher.bat
+```
+
+After that, open the extension popup and click **Start Desktop App**.
+
+To start automatically when Windows starts, double-click:
+
+```text
+Install Background Startup.bat
+```
+
+To remove that behavior, double-click:
+
+```text
+Remove Background Startup.bat
 ```
 
 ## Presentation Frontend
@@ -190,6 +229,7 @@ The base hand landmark model was not trained from scratch. The main engineering 
 config/                  Gesture tuning profiles
 docs/                    Demo and explanation notes
 frontend/                Local presentation frontend
+extension/               Chrome control panel for live desktop control
 scripts/                 Build and entry scripts
 src/gesture_control/     Main application package
 tests/                   Automated tests
