@@ -1,6 +1,8 @@
-﻿# Hand Gesture Control
+# Hand Gesture Control
 
-A real-time computer vision interface that lets users control a computer through hand gestures. The system uses a webcam to detect hand landmarks, classifies gestures from hand geometry, smooths noisy predictions, and maps stable gestures to practical actions such as cursor movement, volume adjustment, shortcuts, media control, browser navigation, presentation control, and QR-based file sharing.
+A real-time computer vision system for controlling a desktop using hand gestures. The application captures webcam video, detects 21 hand landmarks, classifies stable gestures, and maps them to everyday actions such as cursor movement, clicks, volume control, browser navigation, media playback, presentation control, screenshots, and local file transfer.
+
+The project focuses on practical human-computer interaction: low-latency tracking, safety locks, gesture smoothing, configurable profiles, and an optional Chrome extension panel for controlling the desktop app without typing terminal commands.
 
 ## Project Preview
 
@@ -9,42 +11,47 @@ A real-time computer vision interface that lets users control a computer through
 | ![Point gesture detection](frontend/assets/gesture-point.jpeg) | ![Three finger gesture detection](frontend/assets/gesture-three-fingers.jpeg) |
 | ![Peace gesture detection](frontend/assets/gesture-peace.jpeg) | ![Fist lock gesture detection](frontend/assets/gesture-fist.jpeg) |
 
-## Key Features
+## Highlights
 
-- Real-time hand tracking from webcam video.
-- 21-landmark hand pose detection using MediaPipe.
-- Cursor mode with point-to-move, pinch-click, drag, scroll, and right-click support.
-- Volume mode controlled by thumb-index distance.
-- Shortcut, media, browser, and presentation control modes.
-- YouTube-friendly media gestures for next video, previous video, and play/pause.
-- QR-based local file sharing from laptop to phone or another computer.
-- Safety controls including preview mode, open-palm unlock, hold-fist lock, cooldowns, and gesture smoothing.
-- Calibration profiles for sensitivity, pinch distance, and shortcut tuning.
-- Event logging, snapshots, recording support, and Windows executable packaging.
-- Optional Chrome control panel with live mode, FPS, lock, and sensitivity controls.
-- Polished local presentation frontend with day/night mode.
+- Real-time hand tracking from a standard webcam.
+- MediaPipe hand landmark detection with 21 key points per hand.
+- One Euro filtering, temporal smoothing, and gesture debouncing for stable recognition.
+- Formal gesture state machine with lock, unlock, cursor, media, browser, presentation, and sharing states.
+- Cursor movement with smoothing, dead-zone control, acceleration, pinch click, drag-and-drop, scroll, and right click.
+- System volume control using thumb-index distance.
+- Keyboard shortcut automation through PyAutoGUI.
+- YouTube-friendly media controls for play/pause, next video, previous video, and mute.
+- Presentation controls for starting, ending, and navigating slides.
+- QR-based local file sharing from laptop to phone or another computer on the same Wi-Fi.
+- Optional Chrome extension panel with live status, mode switching, sensitivity sliders, emergency lock, and desktop app launcher.
+- Event logging, snapshots, recording support, calibration profiles, and Windows launch scripts.
 
 ## Tech Stack
 
-- Python
+- Python 3.10/3.11
 - OpenCV
 - MediaPipe
 - NumPy
 - PyAutoGUI
 - PyCAW
-- PyInstaller
-- HTML, CSS, and JavaScript
+- WebSockets
 - Chrome Extension Manifest V3
+- HTML, CSS, and JavaScript
 
-## How It Works
+## System Architecture
 
-1. OpenCV captures frames from the webcam.
-2. MediaPipe detects 21 hand landmarks in real time.
-3. The gesture layer calculates finger states and landmark distances.
-4. One Euro filtering and temporal smoothing reduce landmark jitter.
-5. A finite state machine debounces gestures and controls action safety.
-6. The action engine maps stable gestures to system actions.
-7. Safety rules prevent accidental triggering while controlling the computer.
+```text
+Webcam
+  -> OpenCV frame capture
+  -> MediaPipe hand landmark detection
+  -> One Euro landmark filtering
+  -> Gesture classification
+  -> Gesture debouncing and finite state machine
+  -> Action engine
+  -> OS-level automation / volume / browser / file sharing
+```
+
+The base hand landmark detector is provided by MediaPipe. The application layer builds the interaction system around it: gesture rules, filtering, thresholds, state transitions, safety logic, calibration, and OS automation.
 
 ## Gesture Controls
 
@@ -93,7 +100,7 @@ pinch           copy and open transfer page
 phone camera    scan QR code
 ```
 
-## Setup
+## Installation
 
 Use Python 3.10 or 3.11.
 
@@ -105,19 +112,27 @@ pip install -r requirements.txt
 pip install -e .
 ```
 
-On the first run, the hand landmark model is cached in the `models/` folder.
+On the first run, the MediaPipe hand landmark model is cached in the `models/` folder.
 
-## Run
+## Quick Start
 
-No-command launch:
+The easiest way to run the project on Windows is:
 
 ```text
 Double-click Start Gesture Control.bat
 ```
 
-For file sharing, either double-click `Start Gesture Control Share.bat` and choose a file, or drag a file onto it.
+For file sharing:
 
-Preview mode:
+```text
+Double-click Start Gesture Control Share.bat
+```
+
+You can also drag a file onto `Start Gesture Control Share.bat` to start the transfer demo with that file selected.
+
+## Command-Line Usage
+
+Preview mode, with no real system actions:
 
 ```powershell
 python -m gesture_control --camera -1 --profile config/default_profile.json --show-debug
@@ -126,13 +141,13 @@ python -m gesture_control --camera -1 --profile config/default_profile.json --sh
 Real control mode:
 
 ```powershell
-python -m gesture_control --camera -1 --enable-actions --profile config/my_profile.json --show-debug --ui-scale 0.5
+python -m gesture_control --camera -1 --enable-actions --profile config/default_profile.json --show-debug --ui-scale 0.5
 ```
 
 File transfer demo:
 
 ```powershell
-python -m gesture_control --camera -1 --enable-actions --profile config/my_profile.json --share-path "path\to\demo.pdf" --show-debug --ui-scale 0.5
+python -m gesture_control --camera -1 --enable-actions --profile config/default_profile.json --share-path "path\to\demo.pdf" --show-debug --ui-scale 0.5
 ```
 
 Chrome extension bridge:
@@ -141,61 +156,86 @@ Chrome extension bridge:
 python -m gesture_control --camera -1 --enable-actions --enable-extension --profile config/default_profile.json --show-debug
 ```
 
-Then open `chrome://extensions`, enable Developer mode, choose **Load unpacked**, and select the `extension` folder.
+## Chrome Extension
 
-To let the extension start the desktop app, run this once:
+The extension is a control panel for the Python desktop app. Gesture processing still runs locally in Python.
+
+Setup:
+
+1. Open `chrome://extensions`.
+2. Enable Developer mode.
+3. Click **Load unpacked**.
+4. Select the `extension` folder.
+
+To let the extension start the desktop app directly, run this once:
 
 ```text
 Install Extension Launcher.bat
 ```
 
-After that, open the extension popup and click **Start Desktop App**.
+Then open the extension popup and click **Start Desktop App**.
 
-To start automatically when Windows starts, double-click:
+If you want the app to start automatically when Windows starts:
 
 ```text
 Install Background Startup.bat
 ```
 
-To remove that behavior, double-click:
+To remove startup launch:
 
 ```text
 Remove Background Startup.bat
 ```
 
-## Presentation Frontend
+To remove the extension launcher protocol:
 
-Open the local project frontend:
-
-```powershell
-start frontend\index.html
+```text
+Remove Extension Launcher.bat
 ```
-
-The frontend includes the project overview, architecture, feature summary, image gallery, demo command, and day/night mode.
 
 ## File Sharing
 
-To share one file with a phone:
+File sharing starts a local Wi-Fi server and displays a transfer link with a QR code. A phone or another computer on the same Wi-Fi network can scan the QR code or open the link to download the selected file.
+
+Example:
 
 ```powershell
 python -m gesture_control --camera -1 --enable-actions --share-path "path\to\demo.pdf" --show-debug
 ```
 
-The app starts a local Wi-Fi server and shows a QR code. Scanning the QR code from a phone opens the download flow. The phone and laptop must be connected to the same Wi-Fi network.
-
 ## Calibration
 
-Create a custom profile:
+Create a tuned profile:
 
 ```powershell
 python -m gesture_control --calibrate-output config/my_profile.json
 ```
 
-Use the saved profile:
+Run with a saved profile:
 
 ```powershell
 python -m gesture_control --profile config/my_profile.json
 ```
+
+Profiles can tune smoothing, debounce frame counts, pinch thresholds, cursor behavior, volume range, shortcuts, and extension settings.
+
+## Presentation Frontend
+
+A local frontend is included for demos and project presentation.
+
+```powershell
+start frontend\index.html
+```
+
+It includes the project overview, architecture, feature summary, image gallery, demo command, and day/night mode.
+
+## Testing
+
+```powershell
+pytest
+```
+
+The test suite covers gesture classification, action mapping, calibration, event logging, file sharing, media utilities, smoothing, pinch hysteresis, FSM behavior, WebSocket command handling, and app behavior.
 
 ## Build Executable
 
@@ -209,33 +249,18 @@ The executable is created at:
 dist/GestureControl/GestureControl.exe
 ```
 
-## Testing
-
-```powershell
-pytest
-```
-
-The test suite covers gesture classification, action mapping, calibration, event logging, file sharing, media utilities, and app behavior.
-
-## Applied AI Explanation
-
-This is an Applied AI project because it integrates a pretrained computer vision model into a real interaction workflow. MediaPipe detects hand landmarks from camera frames, and the application layer converts those landmark predictions into stable gestures and system actions.
-
-The base hand landmark model was not trained from scratch. The main engineering contribution is the decision layer: gesture classification, smoothing, thresholds, calibration, safety logic, and automation.
-
 ## Repository Structure
 
 ```text
 config/                  Gesture tuning profiles
 docs/                    Demo and explanation notes
+extension/               Chrome control panel
 frontend/                Local presentation frontend
-extension/               Chrome control panel for live desktop control
-scripts/                 Build and entry scripts
+scripts/                 Build, launch, and setup scripts
 src/gesture_control/     Main application package
 tests/                   Automated tests
 ```
 
-## Resume Summary
+## Project Summary
 
-Built a real-time gesture-controlled computer interaction system using OpenCV and MediaPipe, enabling cursor movement, volume control, shortcuts, browser actions, presentation control, media navigation, and QR-based local file transfer. Engineered gesture classification, temporal smoothing, calibration, safety locks, event logging, and Windows packaging for a reliable Applied AI user experience.
-
+Hand Gesture Control demonstrates an applied computer vision pipeline for real-time desktop interaction. It combines hand landmark detection, custom gesture classification, smoothing, state management, and OS-level automation into a usable control system. The main engineering work is in making gestures reliable enough for practical use through filtering, debouncing, safety states, calibration, and clear interaction modes.
