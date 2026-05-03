@@ -1,5 +1,5 @@
 const MODES = ["cursor", "volume", "shortcuts", "media", "browser", "presentation", "share"];
-const DEFAULT_SETTINGS = { cursor_speed: 1.35, alpha: 0.3, dead_zone_radius: 0.04, enabled: false };
+const DEFAULT_SETTINGS = { cursor_speed: 2.4, alpha: 0.55, dead_zone_radius: 0.018, enabled: false };
 
 const els = {
   dot: document.querySelector("#dot"),

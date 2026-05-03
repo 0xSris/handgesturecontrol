@@ -3,10 +3,10 @@ from __future__ import annotations
 from dataclasses import dataclass
 from math import hypot
 
-CURSOR_ALPHA = 0.3  # Smooths fingertip motion without making cursor unusably delayed.
-DEAD_ZONE_RADIUS = 0.04  # Neutral hand radius where tiny tremor is ignored.
-BASE_SPEED = 1.35  # Matches the original cursor sensitivity default.
-ACCELERATION_EXPONENT = 1.5  # Precision at low velocity, range at high velocity.
+CURSOR_ALPHA = 0.55  # Responsive enough for live cursor use while still damping jitter.
+DEAD_ZONE_RADIUS = 0.018  # Small tremor guard without freezing normal pointing.
+BASE_SPEED = 2.4  # Restores practical screen travel after acceleration shaping.
+ACCELERATION_EXPONENT = 1.15  # Gentler curve keeps slow motion precise without feeling stuck.
 EDGE_SLOW_ZONE = 0.05  # Last 5 percent of the screen gets slower for controllable edges.
 
 
@@ -42,9 +42,9 @@ class CursorEngine:
             return self._cursor
 
         prev_x, prev_y = self._previous_hand if self._previous_hand is not None else index_position
-        velocity = hypot(raw_x - prev_x, raw_y - prev_y)
+        velocity = min(hypot(raw_x - prev_x, raw_y - prev_y) * 12.0, 1.0)
         speed = self.config.base_speed * (velocity ** self.config.acceleration_exponent)
-        speed = max(speed, 0.02)
+        speed = min(max(speed, 0.18), self.config.base_speed)
 
         cursor_x, cursor_y = self._cursor
         target_x = 0.5 + (raw_x - 0.5) * self.config.base_speed
